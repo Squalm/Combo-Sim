@@ -5,14 +5,6 @@ Copyright (c) Squalm 2023
 
 Scope:  
 Optimise a fishelbrand deck by goldfishing it and making small changes.
-
-==#
-
-# CARDS
-#==
-Dict: Int -> (type, on cast(cost, mana, draw, other), on T(allowed, cost, mana, draw, other),on T&sac(allowed, cost, mana, draw, other),  )
-
-cost/mana: (W, U, B, R, G, choice(number, W bool, U bool, B bool, R bool, G bool))
 """
 
 import random
