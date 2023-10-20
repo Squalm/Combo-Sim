@@ -55,6 +55,34 @@ sphere       = 203
 wraith       = 233
 # epicure      = 234
 
+cardLookupDict = {
+    1: 'plains',
+    2: 'island',
+    3: 'swamp',
+    4: 'mountain',
+    5: 'forest',
+    11: 'spring',
+    12: 'skerry',
+    13: 'vent',
+    101: 'star',
+    102: 'petal',
+    111: 'offering',
+    112: 'ritual',
+    113: 'manamorphose',
+    121: 'brainspoil',
+    122: 'energytap',
+    123: 'looting',
+    124: 'kaervek',
+    125: 'ponder',
+    126: 'preordain',
+    127: 'knowledge',
+    128: 'visions',
+    131: 'gurmangler',
+    132: 'attendants',
+    203: 'sphere',
+    233: 'wraith'
+}
+
 W = 0
 U = 1
 B = 2
@@ -170,14 +198,17 @@ class game():
                 Fore.YELLOW + f"{self.floating[0]} " + Fore.BLUE + f"{self.floating[1]} " + Fore.MAGENTA + f"{self.floating[2]} " + 
                 Fore.RED + f"{self.floating[3]} " + Fore.GREEN + f"{self.floating[4]} " + Fore.WHITE + f"{self.floating[5]}" + Style.RESET_ALL)
             if full:
-                print(Style.RESET_ALL + Style.DIM + "  hand   " + Style.RESET_ALL + Fore.CYAN + str(self.hand))
-                print(Style.RESET_ALL + Style.DIM + "  field  " + Style.RESET_ALL + Fore.CYAN + str(self.battlefield))
-                print(Style.RESET_ALL + Style.DIM + "  tapped " + Style.RESET_ALL + Fore.CYAN + str(self.tapped) + Style.RESET_ALL)
-                print(Style.RESET_ALL + Style.DIM + "  yard   " + Style.RESET_ALL + Fore.CYAN + str(self.graveyard) + Style.RESET_ALL)
+                print(Style.RESET_ALL + Style.DIM + "  hand   " + Style.RESET_ALL + Fore.CYAN + str(self.lookUpNames(self.hand)))
+                print(Style.RESET_ALL + Style.DIM + "  field  " + Style.RESET_ALL + Fore.CYAN + str(self.lookUpNames(self.battlefield)))
+                print(Style.RESET_ALL + Style.DIM + "  tapped " + Style.RESET_ALL + Fore.CYAN + str(self.lookUpNames(self.tapped)) + Style.RESET_ALL)
+                print(Style.RESET_ALL + Style.DIM + "  yard   " + Style.RESET_ALL + Fore.CYAN + str(self.lookUpNames(self.graveyard)) + Style.RESET_ALL)
             
     def stateTurn(self) -> None:
         if self.verbose:
             print(f"\n# TURN {self.turn}")
+
+    def lookUpNames(self, l: list) -> list:
+        return [cardLookupDict.get(i, i) for i in l]
 
     def win(self, bywhat) -> None:
         if self.verbose:
@@ -193,7 +224,7 @@ class game():
 
         if self.verbose:
             drawn = self.library[0:n]
-            print(Style.RESET_ALL + Style.DIM + "draws " + Style.RESET_ALL + Fore.CYAN + str(drawn) + Style.RESET_ALL)
+            print(Style.RESET_ALL + Style.DIM + "draws " + Style.RESET_ALL + Fore.CYAN + str(self.lookUpNames(drawn)) + Style.RESET_ALL)
 
         for _ in range (0, n):
             if len(self.library) == 0:
@@ -236,7 +267,7 @@ class game():
             library.insert(0, card)
 
         if self.verbose:
-            print(Style.RESET_ALL + Style.DIM + "scrys " + Style.RESET_ALL + Fore.CYAN + f"{top} top, {bottom} bottom" + Style.RESET_ALL)
+            print(Style.RESET_ALL + Style.DIM + "scrys " + Style.RESET_ALL + Fore.CYAN + f"{self.lookUpNames(top)} top, {self.lookUpNames(bottom)} bottom" + Style.RESET_ALL)
 
     def discard(self, n: int) -> None:
         if self.verbose:
@@ -252,7 +283,6 @@ class game():
             elif len(self.hand) > 0:
                 self.graveyard.append(self.hand.pop(0))
                 
-
     def mulligan(self) -> None:
         """Draw hands and mulligan until we have a good enough hand."""
 
@@ -460,7 +490,7 @@ class game():
                     self.spend(1)
                     self.make(1)
                     self.draw(1)
-                    self.sac(1)
+                    self.sac(i)
 
                     playedSomething = True
 
@@ -712,19 +742,16 @@ class game():
         """Sacs element i from the battlefield and adds it to the graveyard."""
         if not tapped:
             if self.verbose:
-                print(Style.RESET_ALL + Style.DIM + "sacs " + Style.RESET_ALL + Fore.CYAN + str(self.battlefield[i]) +
-                    Style.RESET_ALL + Style.DIM + " -> yard " + Style.RESET_ALL + Fore.CYAN + str(self.graveyard) + Style.RESET_ALL)
+                print(Style.RESET_ALL + Style.DIM + "sacs " + Style.RESET_ALL + Fore.CYAN + cardLookupDict[self.battlefield[i]] + Style.RESET_ALL)
             self.graveyard.append(self.battlefield.pop(i))
         else:
             if self.verbose:
-                print(Style.RESET_ALL + Style.DIM + "sacs " + Style.RESET_ALL + Fore.CYAN + str(self.tapped[i]) +
-                    Style.RESET_ALL + Style.DIM + " -> yard " + Style.RESET_ALL + Fore.CYAN + str(self.graveyard) + Style.RESET_ALL)
+                print(Style.RESET_ALL + Style.DIM + "sacs " + Style.RESET_ALL + Fore.CYAN + cardLookupDict[self.tapped[i]] + Style.RESET_ALL)
             self.graveyard.append(self.tapped.pop(i))
 
     def tap(self, i: int) -> None:
         if self.verbose:
-            print(Style.RESET_ALL + Style.DIM + "taps " + Style.RESET_ALL + Fore.CYAN + str(self.battlefield[i]) +
-                  Style.RESET_ALL + Style.DIM + " -> tapped " + Style.RESET_ALL + Fore.CYAN + str(self.tapped) + Style.RESET_ALL)
+            print(Style.RESET_ALL + Style.DIM + "taps " + Style.RESET_ALL + Fore.CYAN + cardLookupDict[self.battlefield[i]] + Style.RESET_ALL)
         self.tapped.append(self.battlefield.pop(i))
 
     def delve(self, n: int) -> None:
@@ -737,15 +764,15 @@ class game():
     def playPermanent(self, i: int) -> None:
         """Plays element i from the hand and adds it to the battlefield."""
         if self.verbose:
-            print(Style.RESET_ALL + Style.DIM + "plays " + Style.RESET_ALL + Fore.CYAN + str(self.hand[i]) +
-                  Style.RESET_ALL + Style.DIM + " -> field " + Style.RESET_ALL + Fore.CYAN + str(self.battlefield) + Style.RESET_ALL)
+            print(Style.RESET_ALL + Style.DIM + "plays " + Style.RESET_ALL + Fore.CYAN + cardLookupDict[self.hand[i]] +
+                  Style.RESET_ALL + Style.DIM + " -> field " + Style.RESET_ALL + Fore.CYAN + str(self.lookUpNames(self.battlefield)) + Style.RESET_ALL)
         self.battlefield.append(self.hand.pop(i))
         self.storm += 1
 
     def playNonPermanent(self, i: int) -> None:
         if self.verbose:
-            print(Style.RESET_ALL + Style.DIM + "plays " + Style.RESET_ALL + Fore.CYAN + str(self.hand[i]) +
-                  Style.RESET_ALL + Style.DIM + " -> yard " + Style.RESET_ALL + Fore.CYAN + str(self.graveyard) + Style.RESET_ALL)
+            print(Style.RESET_ALL + Style.DIM + "plays " + Style.RESET_ALL + Fore.CYAN + cardLookupDict[self.hand[i]] +
+                  Style.RESET_ALL + Style.DIM + " -> yard " + Style.RESET_ALL + Fore.CYAN + str(self.lookUpNames(self.graveyard)) + Style.RESET_ALL)
         self.graveyard.append(self.hand.pop(i))
         self.storm += 1
 
@@ -814,8 +841,8 @@ class game():
     def statePlayFromHand(self, i: int) -> None:
         """If verbose, makes a pretty statement about a play."""
         if self.verbose:
-            print(Style.RESET_ALL + Style.DIM + "plays " + Style.RESET_ALL + Fore.CYAN + str(self.hand[i]) + 
-                  Style.RESET_ALL + Style.DIM + " -> field " + Style.RESET_ALL + Fore.CYAN + str(self.battlefield) + Style.RESET_ALL)
+            print(Style.RESET_ALL + Style.DIM + "plays " + Style.RESET_ALL + Fore.CYAN + cardLookupDict[self.hand[i]] + 
+                  Style.RESET_ALL + Style.DIM + " -> field " + Style.RESET_ALL + Fore.CYAN + str(self.lookUpNames(self.battlefield)) + Style.RESET_ALL)
 
 
 def allDecks(deckBase: list, deckOptions: list, deckSize=60) -> list:
@@ -831,21 +858,37 @@ def allDecks(deckBase: list, deckOptions: list, deckSize=60) -> list:
 
     return all_possible_decks
 
+
 toCheck = allDecks(deckBase, deckOptions)
 wins = {}
 
-for deck in tqdm(toCheck[0:10]):
+# Do the calcs
+for deck in tqdm(toCheck[0:5]):
     won = 0
     for _ in range(0,10000):
-        t = game(default)
+        t = game(deck)
         t.firstTurns()
         if t.go():
             won += 1
     wins[tuple(deck)] = won
 
+# Get everything ready to spit out a csv
+def prettyDecklist(deck):
+    counts = {}
+    for card in cardLookupDict:
+        counts[card] = 0
+    for card in deck:
+        counts[card] += 1
+    
+    out = ""
+    for card in counts:
+        out += str(counts[card]) + ","
+    return out
+
 out = open('results.csv', 'w')
-for pair in wins:
-    out.write(str(pair) + "," + str(wins[pair]) + ",\n")
+out.write(", ".join([cardLookupDict[name] for name in cardLookupDict]) + ",\n")
+for deck in wins:
+    out.write(prettyDecklist(deck) + str(wins[deck]) + ",\n")
 out.close()
 
 print(max(wins, key= lambda x: x[1]))
