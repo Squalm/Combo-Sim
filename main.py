@@ -854,11 +854,11 @@ def allDecks(deckBase: list, deckOptions: list, deckSize=60) -> list:
     # Generate all possible combinations of cards respecting the constraints
     all_possible_decks = []
     for comb in itertools.combinations(deckOptions, toAdd):
-        all_possible_decks.append(deckBase + list(comb))
+        all_possible_decks.append(tuple(deckBase) + comb)
 
-    return all_possible_decks
+    return list(set(all_possible_decks)) # enforce uniqueness
 
-
+# Decks are by default tuples, but are passed to games as lists
 toCheck = allDecks(deckBase, deckOptions)
 wins = {}
 
@@ -866,14 +866,14 @@ wins = {}
 for deck in tqdm(toCheck[0:5]):
     won = 0
     for _ in range(0,10000):
-        t = game(deck)
+        t = game(list(deck))
         t.firstTurns()
         if t.go():
             won += 1
-    wins[tuple(deck)] = won
+    wins[deck] = won
 
 # Get everything ready to spit out a csv
-def prettyDecklist(deck):
+def prettyDecklist(deck: list) -> str:
     counts = {}
     for card in cardLookupDict:
         counts[card] = 0
