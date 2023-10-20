@@ -10,7 +10,7 @@ Optimise a fishelbrand deck by goldfishing it and making small changes.
 import random
 import itertools
 from copy import deepcopy
-from colorama import Fore, Back, Style
+from colorama import Fore, Style
 from tqdm import tqdm
 
 plains   =   1
@@ -200,7 +200,8 @@ class game():
             print(f"\n# TURN {self.turn}")
 
     def lookUpNames(self, l: list) -> list:
-        return [cardLookupDict.get(i, i) for i in l]
+        """Returns the english names of cards with ids in the list `l`."""
+        return [cardLookupDict.get(i, str(i)) for i in l]
 
     def win(self, bywhat) -> None:
         if self.verbose:
@@ -225,6 +226,7 @@ class game():
             self.hand.append(self.library.pop(0))
 
     def scry(self, n: int) -> None:
+        """Scrys `n` cards."""
         if len(self.library) < n:
             self.lose()
         peek = self.library[0:n]
@@ -262,6 +264,7 @@ class game():
             print(Style.RESET_ALL + Style.DIM + "scrys " + Style.RESET_ALL + Fore.CYAN + f"{self.lookUpNames(top)} top, {self.lookUpNames(bottom)} bottom" + Style.RESET_ALL)
 
     def discard(self, n: int) -> None:
+        """Discards `n` card from hand."""
         if self.verbose:
             print(Style.RESET_ALL + Style.DIM + "discards " + Style.RESET_ALL + Fore.CYAN + str(n) + Style.RESET_ALL)
         for _ in range(0, n):
@@ -838,12 +841,15 @@ class game():
 
 
 def allDecks(deckBase: list, deckOptions: list, deckSize=60) -> list:
+    """Return a list of all possible decks using a constant base and list of options.
+    
+    List returned has no duplicates."""
     cardCounts = {}
     for card in deckBase:
         cardCounts[card] = cardCounts.get(card, 0) + 1
 
     toAdd = deckSize - len(deckBase)
-    # Generate all possible combinations of cards respecting the constraints
+    # Generate all possible combinations of cards
     all_possible_decks = []
     for comb in itertools.combinations(deckOptions, toAdd):
         all_possible_decks.append(tuple(deckBase) + comb)
@@ -851,21 +857,22 @@ def allDecks(deckBase: list, deckOptions: list, deckSize=60) -> list:
     return list(set(all_possible_decks)) # enforce uniqueness
 
 # Decks are by default tuples, but are passed to games as lists
+# TODO: avoid gobbling memory!
 toCheck = allDecks(deckBase, deckOptions)
 wins = {}
 
 # Do the calcs
-for deck in tqdm(toCheck[0:5]):
+for deck in tqdm(toCheck):
     won = 0
     for _ in range(0,10000):
         t = game(list(deck))
         t.firstTurns()
-        if t.go():
-            won += 1
+        won += t.go()
     wins[deck] = won
 
 # Get everything ready to spit out a csv
 def prettyDecklist(deck: list) -> str:
+    """Returns a string of the counts of different cards ready to be put into the CSV."""
     counts = {}
     for card in cardLookupDict:
         counts[card] = 0
@@ -877,6 +884,7 @@ def prettyDecklist(deck: list) -> str:
         out += str(counts[card]) + ","
     return out
 
+# The fact that the orders are the same so this works is slightly tenuous.
 out = open('results.csv', 'w')
 out.write(", ".join([cardLookupDict[name] for name in cardLookupDict]) + ",\n")
 for deck in wins:
