@@ -9,6 +9,7 @@ Optimise a fishelbrand deck by goldfishing it and making small changes.
 
 import random
 import itertools
+import numpy
 from copy import deepcopy
 from colorama import Fore, Style
 from tqdm import tqdm
@@ -379,6 +380,15 @@ class game():
                         
                         self.playNonPermanent(i)
                         playedSomething = True
+
+                elif self.hand[i] == wraith:
+                    # cycle wraith
+                    self.storm -= 1
+                    self.playNonPermanent(i)
+
+                    self.draw(1)
+
+                    playedSomething = True
 
                 # Try to play an untapped land if we haven't already
                 elif (not playedALand) and self.hand[i] in self.untappedLands:
@@ -859,16 +869,6 @@ def allDecks(deckBase: list, deckOptions: list, deckSize=60) -> list:
 # Decks are by default tuples, but are passed to games as lists
 # TODO: avoid gobbling memory!
 toCheck = allDecks(deckBase, deckOptions)
-wins = {}
-
-# Do the calcs
-for deck in tqdm(toCheck):
-    won = 0
-    for _ in range(0,10000):
-        t = game(list(deck))
-        t.firstTurns()
-        won += t.go()
-    wins[deck] = won
 
 # Get everything ready to spit out a csv
 def prettyDecklist(deck: list) -> str:
@@ -884,11 +884,28 @@ def prettyDecklist(deck: list) -> str:
         out += str(counts[card]) + ","
     return out
 
-# The fact that the orders are the same so this works is slightly tenuous.
+# top of CSV
 out = open('results.csv', 'w')
 out.write(", ".join([cardLookupDict[name] for name in cardLookupDict]) + ",\n")
-for deck in wins:
-    out.write(prettyDecklist(deck) + str(wins[deck]) + ",\n")
 out.close()
 
-print(max(wins, key= lambda x: x[1]))
+# Do the calcs
+for chunk in numpy.array_split(numpy.array(toCheck),1000):
+
+    out = open('results.csv', 'a')
+    
+    wins = {}
+    for deck in tqdm(chunk):
+        won = 0
+        for _ in range(0,10000):
+            t = game(list(deck))
+            t.firstTurns()
+            won += t.go()
+        wins[tuple(deck)] = won
+
+    # The fact that the orders are the same so this works is slightly tenuous.
+    for deck in wins:
+        out.write(prettyDecklist(deck) + str(wins[deck]) + ",\n")
+    out.close()
+
+    print(max(wins, key= lambda x: x[1]))
