@@ -913,5 +913,5 @@ def testDecks(chunk):
     print(max(wins, key= lambda x: x[1]))
 
 for chunk in tqdm(numpy.array_split(numpy.array(toCheck),3000)):
-    threading.Thread(target = testDecks, args = (chunk,))
+    threading.Thread(target = testDecks, args = (chunk,)).start()
     
