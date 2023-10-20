@@ -10,6 +10,7 @@ Optimise a fishelbrand deck by goldfishing it and making small changes.
 import random
 import itertools
 import numpy
+import threading, queue
 from copy import deepcopy
 from colorama import Fore, Style
 from tqdm import tqdm
@@ -888,16 +889,14 @@ def prettyDecklist(deck: list) -> str:
 
 # top of CSV
 out = open('results.csv', 'w')
-out.write(", ".join([cardLookupDict[name] for name in cardLookupDict]) + ",\n")
+out.write(", ".join([cardLookupDict[name] for name in cardLookupDict]) + ",wins,\n")
 out.close()
 
 # Do the calcs
-for chunk in numpy.array_split(numpy.array(toCheck),1000):
-
-    out = open('results.csv', 'a')
-    
+def testDecks(chunk):    
     wins = {}
-    for deck in tqdm(chunk):
+
+    for deck in chunk:
         won = 0
         for _ in range(0,10000):
             t = game(list(deck))
@@ -906,8 +905,13 @@ for chunk in numpy.array_split(numpy.array(toCheck),1000):
         wins[tuple(deck)] = won
 
     # The fact that the orders are the same so this works is slightly tenuous.
+    out = open('results.csv', 'a')
     for deck in wins:
         out.write(prettyDecklist(deck) + str(wins[deck]) + ",\n")
     out.close()
 
     print(max(wins, key= lambda x: x[1]))
+
+for chunk in tqdm(numpy.array_split(numpy.array(toCheck),3000)):
+    threading.Threads(target = testDecks, args = (chunk,))
+    
