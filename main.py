@@ -140,6 +140,8 @@ deckOptions = [
     sphere, sphere, sphere,
     wraith, wraith, wraith, wraith,
     brainspoil, brainspoil,
+    visions, visions,
+    looting, looting,
 ]
 
 
