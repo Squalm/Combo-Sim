@@ -480,7 +480,7 @@ class game():
                     playedSomething = True
 
                 # Filter mana
-                elif star in self.battlefield and sum(self.floating) >= 1:
+                elif star in self.battlefield and sum(self.floating) >= 1 and len(self.library) > 0:
                     i = self.battlefield.index(star)
 
                     self.spend(1)
@@ -490,7 +490,7 @@ class game():
 
                     playedSomething = True
 
-                elif sphere in self.battlefield and sum(self.floating) >= 1:
+                elif sphere in self.battlefield and sum(self.floating) >= 1 and len(self.library) > 0:
                     i = self.battlefield.index(sphere)
 
                     self.spend(1)
@@ -500,7 +500,7 @@ class game():
 
                     playedSomething = True
 
-                elif star in self.hand and sum(self.floating) >= 2:
+                elif star in self.hand and sum(self.floating) >= 2 and len(self.library) > 0:
                     i = self.hand.index(star)
 
                     self.spend(1)
@@ -508,7 +508,7 @@ class game():
 
                     playedSomething = True
 
-                elif sphere in self.hand and sum(self.floating) >= 2:
+                elif sphere in self.hand and sum(self.floating) >= 2 and len(self.library) > 0:
                     i = self.hand.index(sphere)
 
                     self.spend(1)
@@ -516,7 +516,7 @@ class game():
 
                     playedSomething = True
                 
-                elif manamorphose in self.hand and self.floating[R] >= 1 and sum(self.floating) >= 2:
+                elif manamorphose in self.hand and self.floating[R] >= 1 and sum(self.floating) >= 2 and len(self.library) > 0:
                     i = self.hand.index(manamorphose)
 
                     self.spend(1, 0, 0, 0, 1)
@@ -528,7 +528,7 @@ class game():
                     playedSomething = True
 
                 # Draw cards
-                elif (knowledge in self.hand) and (sum(self.floating) >= 7 and self.floating[B] >= 1) and (self.numberOf(self.creatures, self.battlefield) + self.numberOf(self.creatures, self.tapped) >= 1):
+                elif (knowledge in self.hand) and (sum(self.floating) >= 7 and self.floating[B] >= 1) and (self.numberOf(self.creatures, self.battlefield) + self.numberOf(self.creatures, self.tapped) >= 1) and len(self.library) >= self.maxCMCon(self.battlefield):
                     i = self.hand.index(knowledge)
 
                     self.spend(4, 0, 1)
@@ -539,7 +539,7 @@ class game():
 
                     playedSomething = True
 
-                elif brainspoil in self.hand and self.floating[B] >= 2 and self.floating[U] >= 1 and sum(self.floating) >= 10 and self.library.count(knowledge) > 0:
+                elif brainspoil in self.hand and self.floating[B] >= 2 and self.floating[U] >= 1 and sum(self.floating) >= 10 and self.library.count(knowledge) > 0 and len(self.library) > self.maxCMCon(self.battlefield):
                     i = self.hand.index(brainspoil)
                     # account for increase of storm (it shouldn't increase)
                     self.storm -= 1
@@ -554,7 +554,7 @@ class game():
                     playedSomething = True
 
                 # Dig for cards
-                elif ponder in self.hand and self.floating[U] >= 1:
+                elif ponder in self.hand and self.floating[U] >= 1 and len(self.library) > 2: 
                     i = self.hand.index(ponder)
 
                     # approximate ponder as scry 2
@@ -567,7 +567,7 @@ class game():
 
                     playedSomething = True
                 
-                elif preordain in self.hand and self.floating[U] >= 1:
+                elif preordain in self.hand and self.floating[U] >= 1 and len(self.library) > 1:
                     i = self.hand.index(preordain)
 
                     # approximate ponder as scry 2
@@ -579,7 +579,7 @@ class game():
 
                     playedSomething = True
 
-                elif looting in self.hand and self.floating[R] >= 1:
+                elif looting in self.hand and self.floating[R] >= 1 and len(self.library) > 1:
                     i = self.hand.index(looting)
 
                     self.spend(0,0,0,0,1)
@@ -588,7 +588,7 @@ class game():
                     self.draw(2)
                     self.discard(2)
 
-                elif visions in self.hand and self.floating[U] >= 1:
+                elif visions in self.hand and self.floating[U] >= 1 and len(self.library) > 2:
                     i = self.hand.index(visions)
 
                     # approximate ponder as scry 2
@@ -917,6 +917,6 @@ def testDecks(chunk):
         out.write(prettyDecklist(deck) + str(wins[deck]) + ",\n")
     out.close()
 
-for chunk in tqdm(numpy.array_split(numpy.array(toCheck),2000)):
+for chunk in tqdm(numpy.array_split(numpy.array(toCheck)[100],10)):
     testDecks(chunk)
     
