@@ -900,21 +900,21 @@ def testDecks(variations, n = 10, wins = {}) -> list:
         def checkOneDeck(deck):
             if tuple(deck) not in wins.keys():
                 won = 0
-                for _ in range(0,10000):
+                for _ in range(0,1000):
                     t = game(list(deck))
                     t.firstTurns()
                     won += t.go()
                 wins[tuple(deck)] = won
 
-        thrds = []
+        #thrds = []
         for deck in tqdm(variations):
-            tempThread = threading.Thread(target=checkOneDeck, args=(list(deck),))
-            tempThread.start()
-            thrds.append(tempThread)
-        #    checkOneDeck(list(deck))
+        #    tempThread = threading.Thread(target=checkOneDeck, args=(list(deck),))
+        #    tempThread.start()
+        #    thrds.append(tempThread)
+            checkOneDeck(list(deck))
         
-        for th in tqdm(thrds):
-            th.join()
+        #for th in tqdm(thrds):
+        #    th.join()
 
         # The fact that the orders are the same so this works is slightly tenuous.
         out = open('results.csv', 'a')
