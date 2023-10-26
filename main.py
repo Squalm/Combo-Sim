@@ -8,7 +8,7 @@ Optimise a fishelbrand deck by goldfishing it and making small changes.
 """
 
 import random, time, itertools, numpy
-import threading, queue
+import threading
 from copy import deepcopy
 from colorama import Fore, Style
 from tqdm import tqdm
@@ -133,14 +133,16 @@ deckOptions = [
     ponder,
     gurmangler, gurmangler,
     attendants,
-    forest,
     mountain,
     swamp,
-    sphere, sphere, sphere,
-    wraith, wraith, wraith, wraith,
-    brainspoil, brainspoil,
-    visions, visions,
-    looting, looting,
+    sphere,
+    wraith,
+    brainspoil,
+    visions,
+    looting,
+    preordain,
+    knowledge,
+    star,
 ]
 
 
@@ -851,25 +853,24 @@ class game():
                   Style.RESET_ALL + Style.DIM + " -> field " + Style.RESET_ALL + Fore.CYAN + str(self.lookUpNames(self.battlefield)) + Style.RESET_ALL)
 
 
-def allDecks(deckBase: list, deckOptions: list, deckSize=60) -> list:
-    """Return a list of all possible decks using a constant base and list of options.
-    
-    List returned has no duplicates."""
+def nearbyDecks(deckBase: list, deckOptions: list) -> list:
+    """Return a list of all decks created by substituting one card for
+    another given a base deck."""
     cardCounts = {}
-    for card in deckBase:
+    for card in cardLookupDict.keys():
         cardCounts[card] = cardCounts.get(card, 0) + 1
 
-    toAdd = deckSize - len(deckBase)
     # Generate all possible combinations of cards
-    all_possible_decks = []
-    for comb in itertools.combinations(deckOptions, toAdd):
-        all_possible_decks.append(tuple(deckBase) + comb)
+    all_possible_decks = [tuple(deckBase)]
+    for newCard in deckOptions:
+        for i in range(0, len(deckBase)):
+            if cardCounts[newCard] + 1 <= 4:
+                t = deepcopy(deckBase)
+                t.pop(i)
+                t.append(newCard)
+                all_possible_decks.append(tuple(t))
 
     return list(set(all_possible_decks)) # enforce uniqueness
-
-# Decks are by default tuples, but are passed to games as lists
-# TODO: avoid gobbling memory!
-toCheck = allDecks(deckBase, deckOptions)
 
 # Get everything ready to spit out a csv
 def prettyDecklist(deck: list) -> str:
@@ -891,32 +892,43 @@ out.write(", ".join([cardLookupDict[name] for name in cardLookupDict]) + ",wins,
 out.close()
 
 # Do the calcs
-def testDecks(chunk):
-    wins = {}
+def testDecks(variations, n = 10, wins = {}) -> list:
+    """Tests variations of a deck and continues n times"""
 
-    def checkOneDeck(deck):
-        won = 0
-        for _ in range(0,10000):
-            t = game(list(deck))
-            t.firstTurns()
-            won += t.go()
-        wins[tuple(deck)] = won
+    if n > 0:
 
-    thrds = []
-    for deck in chunk:
-        tempThread = threading.Thread(target=checkOneDeck, args=(deck,))
-        tempThread.start()
-        thrds.append(tempThread)
+        def checkOneDeck(deck):
+            if tuple(deck) not in wins.keys():
+                won = 0
+                for _ in range(0,10000):
+                    t = game(list(deck))
+                    t.firstTurns()
+                    won += t.go()
+                wins[tuple(deck)] = won
+
+        thrds = []
+        for deck in tqdm(variations):
+            tempThread = threading.Thread(target=checkOneDeck, args=(list(deck),))
+            tempThread.start()
+            thrds.append(tempThread)
+        #    checkOneDeck(list(deck))
+        
+        for th in tqdm(thrds):
+            th.join()
+
+        # The fact that the orders are the same so this works is slightly tenuous.
+        out = open('results.csv', 'a')
+        for deck in wins:
+            out.write(prettyDecklist(list(deck)) + str(wins[deck]) + ",\n")
+        out.close()
+
+        # find best deck and do anohter iterartion using that
+        newVars = nearbyDecks(max(wins, key = lambda x : x[1]), deckOptions)
+        return testDecks(newVars, n-1, wins) 
     
-    for th in thrds:
-        th.join()
+    else: 
+        return max(wins, key = lambda x : x[1])
 
-    # The fact that the orders are the same so this works is slightly tenuous.
-    out = open(f'results.csv', 'a')
-    for deck in wins:
-        out.write(prettyDecklist(deck) + str(wins[deck]) + ",\n")
-    out.close()
-
-for chunk in tqdm(numpy.array_split(numpy.array(toCheck)[100],10)):
-    testDecks(chunk)
-    
+# Decks are by default tuples, but are passed to games as lists
+toCheck = nearbyDecks(default, deckOptions)
+print(testDecks(toCheck))
