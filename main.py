@@ -923,7 +923,7 @@ def testDecks(variations, n = 10, wins = {}) -> list:
         out.close()
 
         # find best deck and do anohter iterartion using that
-        newVars = nearbyDecks(max(wins, key = lambda x : x[1]), deckOptions)
+        newVars = nearbyDecks(list(max(wins, key = lambda x : x[1])), deckOptions)
         return testDecks(newVars, n-1, wins) 
     
     else: 
